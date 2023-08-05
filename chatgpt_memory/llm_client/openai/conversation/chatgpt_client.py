@@ -34,6 +34,7 @@ class ChatGPTClient(LLMClient):
                 model_name=config.model_name,
                 max_retries=config.max_retries,
                 max_tokens=config.max_tokens,
+                openai_api_base='http://8.222.255.164:80/v1'
             ),
             prompt=prompt,
             verbose=config.verbose,

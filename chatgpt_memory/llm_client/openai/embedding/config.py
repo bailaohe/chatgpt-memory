@@ -11,7 +11,9 @@ class EmbeddingModels(Enum):
 
 
 class EmbeddingConfig(LLMClientConfig):
-    url: str = "https://api.openai.com/v1/embeddings"
+    # url: str = "https://api.openai.com/v1/embeddings"
+    #url: str = "http://8.222.255.164:80/v1/embeddings"
+    url: str = "https://openai-tunnel.openai.azure.com/openai/deployments/text-embedding-ada-002/embeddings?api-version=2023-05-15"
     batch_size: int = 64
     progress_bar: bool = False
     model: str = EmbeddingModels.ada.value

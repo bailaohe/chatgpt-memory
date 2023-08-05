@@ -134,6 +134,44 @@ class EmbeddingClient(LLMClient):
 
         return np.array(generated_embeddings)
 
+    def embed_azure(self, model: str, text: List[str]) -> np.ndarray:
+        """
+        Embeds the batch of texts using the specified LLM.
+
+        Args:
+            model (str): LLM model name for embeddings.
+            text (List[str]): List of documents to be embedded.
+
+        Raises:
+            ValueError: When the OpenAI API key is missing.
+
+        Returns:
+            np.ndarray: embeddings for the input documents.
+        """
+        if self.api_key is None:
+            raise ValueError(
+                "OpenAI API key is not set. You can set it via the " "`api_key` parameter of the `LLMClient`."
+            )
+
+        generated_embeddings: List[Any] = []
+
+        headers: Dict[str, str] = {"Content-Type": "application/json", "api-key": self.api_key}
+        payload: Dict[str, Union[List[str], str]] = {"model": model, "input": text}
+
+        res = openai_request(
+            url=self.openai_embedding_config.url,
+            headers=headers,
+            payload=payload,
+            timeout=self.time_out,
+        )
+
+        unordered_embeddings = [(ans["index"], ans["embedding"]) for ans in res["data"]]
+        ordered_embeddings = sorted(unordered_embeddings, key=lambda x: x[0])
+
+        generated_embeddings = [emb[1] for emb in ordered_embeddings]
+
+        return np.array(generated_embeddings)
+
     def embed_batch(self, model: str, text: List[str]) -> np.ndarray:
         all_embeddings = []
         for i in tqdm(
@@ -143,7 +181,7 @@ class EmbeddingClient(LLMClient):
         ):
             batch = text[i : i + self.openai_embedding_config.batch_size]
             batch_limited = [self._ensure_text_limit(content) for content in batch]
-            generated_embeddings = self.embed(model, batch_limited)
+            generated_embeddings = self.embed_azure(model, batch_limited)
             all_embeddings.append(generated_embeddings)
 
         return np.concatenate(all_embeddings)
